@@ -1,0 +1,160 @@
+html {
+  font-family: "Times New Roman", Times, serif;
+  background-color: #181818;
+}
+
+header {
+  text-align: right;
+}
+
+h1 {
+  color: #538d4e;
+  text-align: center;
+}
+#alert {
+  background-color: white;
+  color: black;
+  width: 150px;
+  height: 20px;
+  text-align: center;
+  margin: 0 auto;
+  visibility: hidden;
+}
+
+#table {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  grid-template-rows: repeat(6, 60px);
+  gap: 8px;
+  justify-content: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.tile {
+  border: 2px solid white;
+  width: 60px;
+  height: 60px;
+  align-content: center;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  perspective: 600px;
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+#summary {
+  position: absolute;
+  top: 240px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 300px;
+  padding: 30px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+
+  background-color: white;
+  border-radius: 20px;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+
+  visibility: hidden;
+  opacity: 1;
+}
+
+#result {
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 0.5px;
+  color: #538d4e;
+}
+
+#next_game {
+  padding: 12px 26px;
+  background-color: #538d4e;
+  color: white;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+#next_game:hover {
+  background-color: #6aaa64;
+  transform: scale(1.03);
+}
+
+next_game:active {
+  transform: scale(0.97);
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+}
+
+.key {
+  border-radius: 5px;
+  padding: 20px 20px;
+  margin: 1px;
+  border: 1px solid black;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+    background-color: inherit;
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.flip {
+  animation: flip 1s ease forwards;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-8px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+  75% {
+    transform: translateX(-1px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.shake {
+  animation: shake 420ms both;
+}
