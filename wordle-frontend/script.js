@@ -185,7 +185,7 @@ function compareToSolution(guess) {
       endGame("You win!");
       return;
     } else if (game.attempts == 6) {
-      endGame("Awh :( Better luck next time!");
+      endGame(game.solution);
       return;
     }
     game.allowInputs = true;
@@ -242,6 +242,7 @@ function resetGame(e) {
     document.getElementById("keyboard").innerHTML = "";
     generateKeyBoard();
     document.getElementById("summary").style.visibility = "hidden";
+    colors.fill("rgb(170,170,170)");
     fetchWord();
     game.allowInputs = true;
     game.currentTile = 0;
