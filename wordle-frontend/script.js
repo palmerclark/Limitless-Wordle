@@ -57,13 +57,17 @@ async function startGame() {
 startGame();
 
 async function fetchWord() {
-  try {
-    const response = await fetch("http://localhost:3000/random-word");
-    const data = await response.json();
-
-    game.solution = data.word;
-  } catch (err) {
-    console.error("Failed to fetch word:", err);
+  while (true) {
+    try {
+      const response = await fetch("http://localhost:3000/random-word");
+      if (!response.ok) throw new Error("Server not ready.");
+      const data = await response.json();
+      game.solution = data.word;
+      return;
+    } catch (err) {
+      console.warn("Retrying word fetch...", err);
+      await new Promise((res) => setTimeout(res, 300));
+    }
   }
 }
 
