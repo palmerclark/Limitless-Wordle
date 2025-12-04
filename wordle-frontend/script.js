@@ -1,60 +1,30 @@
-// Constants & Game State
-const WORD_LENGTH = 5;
-const ROWS = 6;
-
-let divs; // tiles
-let colors = Array(WORD_LENGTH).fill("rgb(170,170,170)");
-let count;
-
+const Config = {
+  word_length: 5,
+  rows: 6,
+  max_attempts: 6,
+  colors: {
+    default: "rgb(170, 170, 170)",
+    correct: "rgb(83, 141, 78)",
+    present: "rgb(181, 159, 59)",
+  }
+};
+//Game State
+let divs;
 const game = {
   solution: "",
   currentTile: 0,
-  endOfRow: WORD_LENGTH,
+  endOfRow: Config.word_length,
   attempts: 0,
+  correct_letters: 0,
   allowInputs: true,
   gameOver: false,
+  colors: Array(Config.word_length).fill(Config.colors.default),
 };
-
-//DOM Generation (Board & Keyboard)
-function generateBoard() {
-  const table = document.getElementById("table");
-
-  for (let i = 0; i < WORD_LENGTH * ROWS; i++) {
-    const tile = document.createElement("div");
-    tile.classList.add("tile");
-    table.appendChild(tile);
-  }
-  divs = document.querySelectorAll("div.tile");
-}
-
-function generateKeyBoard() {
-  const keys = [
-    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Backspace"],
-    ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"],
-    ["Z", "X", "C", "V", "B", "N", "M"],
-  ];
-  const keyboard = document.getElementById("keyboard");
-  keys.forEach((keyboardRow) => {
-    const row = document.createElement("div");
-    row.classList.add("keyboard-row");
-    keyboardRow.forEach((character) => {
-      const button = document.createElement("button");
-      button.textContent = character;
-      button.classList.add("key");
-      row.appendChild(button);
-    });
-    keyboard.appendChild(row);
-  });
-}
 
 async function startGame() {
   await fetchWord();
-  generateBoard();
-  generateKeyBoard();
-  game.allowInputs = true;
+  generateUserFields();
 }
-
-startGame();
 
 async function fetchWord() {
   while (true) {
@@ -71,33 +41,52 @@ async function fetchWord() {
   }
 }
 
-//Input Handling
-addEventListener("keydown", gatherTypedInputs);
-addEventListener("click", gatherButtonInputs);
-
-function gatherTypedInputs(e) {
-  const input = e.key.toUpperCase();
-  printInputs(input);
+function generateUserFields() {
+  generateBoard();
+  generateKeyboard();
 }
 
-function gatherButtonInputs(e) {
-  const target = e.target;
-  let text = "";
-  if (target.tagName == "BUTTON") {
-    text = target.textContent;
+function generateBoard() {
+  const table = document.getElementById("table");
+
+  for (let i = 0; i < Config.word_length * Config.rows; i++) {
+    const tile = document.createElement("div");
+    tile.classList.add("tile");
+    table.appendChild(tile);
   }
-  printInputs(text);
+  divs = document.querySelectorAll("div.tile");
 }
 
+function generateKeyboard() {
+  const keys = [
+    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "BACKSPACE"],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L", "ENTER"],
+    ["Z", "X", "C", "V", "B", "N", "M"],
+  ];
+  const keyboard = document.getElementById("keyboard");
+  keys.forEach((keyboardRow) => {
+    const row = document.createElement("div");
+    row.classList.add("keyboard-row");
+    keyboardRow.forEach((character) => {
+      const button = document.createElement("button");
+      button.textContent = character;
+      button.classList.add("key");
+      row.appendChild(button);
+    });
+    keyboard.appendChild(row);
+  });
+}
+
+startGame();
 //UI Feedback & Animations
 function triggerShake(e) {
+  e.classList.add("shake");
+  e.addEventListener("animationend", onAnimationEnd);
+
   function onAnimationEnd() {
     e.classList.remove("shake");
     e.removeEventListener("animationend", onAnimationEnd);
   }
-
-  e.classList.add("shake");
-  e.addEventListener("animationend", onAnimationEnd);
 }
 
 function displayMessage(message) {
@@ -109,52 +98,75 @@ function displayMessage(message) {
   }, 1500);
 }
 
-//Game Logic
+//Input Handling
+addEventListener("keydown", gatherTypedInputs);
+function gatherTypedInputs(e) {
+  const input = e.key.toUpperCase();
+  printInputs(input);
+}
+
+document.getElementById("keyboard").addEventListener("click", gatherButtonInputs);
+function gatherButtonInputs(e) {
+  const button = e.target.closest("button");
+  if (!button) {
+    return;
+  }
+  printInputs(button.textContent);
+}
+
 function printInputs(input) {
   if (!game.allowInputs) {
     return;
-  } else if (game.currentTile == game.endOfRow && input == "ENTER") {
+  } 
+  
+  const row_start = game.endOfRow - Config.word_length;
+  const row_full = game.currentTile == game.endOfRow;
+
+  if(input == "ENTER"){
+    if(!row_full){
+      for(let i = row_start; i < game.currentTile; i++){
+        triggerShake(divs[i]);
+      }
+      displayMessage("Not enough letters!");
+      return;
+    }
+
     let guess = "";
-    for (let i = game.currentTile - WORD_LENGTH; i < game.currentTile; i++) {
+    for(let i = row_start; i < row_start + Config.word_length; i++){
       guess += divs[i].textContent;
     }
     compareToSolution(guess);
-    game.endOfRow += WORD_LENGTH;
+    game.endOfRow += Config.word_length;
     game.attempts++;
-  } else if (game.currentTile != game.endOfRow && input == "ENTER") {
-    for (
-      let i = game.currentTile - (game.currentTile % WORD_LENGTH);
-      i < game.currentTile;
-      i++
-    ) {
-      triggerShake(divs[i]);
+    return;
+  }
+
+  if(input == "BACKSPACE"){
+    if(game.currentTile > row_start){
+      game.currentTile--;
+      divs[game.currentTile].textContent = "";
+      return;
     }
-    displayMessage("Not enough letters!");
-  } else if (
-    game.currentTile != game.endOfRow &&
-    input.match(/^[A-Z]$/) &&
-    game.currentTile < divs.length &&
-    game.allowInputs == true
-  ) {
+  }
+
+  if(input.match(/^[A-Z]$/) && !row_full){
     divs[game.currentTile].textContent = input;
     game.currentTile++;
   }
-  if (input == "BACKSPACE" && game.currentTile > game.endOfRow - WORD_LENGTH) {
-    game.currentTile--;
-    divs[game.currentTile].textContent = "";
-  }
 }
 
-function compareToSolution(guess) {
-  count = 0;
-  let greens = Array(WORD_LENGTH);
-  let yellows = Array(WORD_LENGTH);
+//Game Logic
 
+function compareToSolution(guess) {
+  game.correct_letters = 0;
+  game.colors = Array(Config.word_length).fill(Config.colors.default);
+  let greens = Array(Config.word_length);
+  let yellows = Array(Config.word_length);
   for (let i = 0; i < guess.length; i++) {
     if (guess[i] == game.solution[i]) {
       greens[i] = guess[i];
-      colors[i] = "rgb(83, 141, 78)";
-      count++;
+      game.colors[i] = Config.colors.correct;
+      game.correct_letters++;
     }
   }
 
@@ -164,44 +176,52 @@ function compareToSolution(guess) {
       greens.indexOf(guess[i]) < 0 &&
       yellows.indexOf(guess[i]) < 0
     ) {
-      colors[i] = "rgb(181, 159, 59)";
+      game.colors[i] = Config.colors.present;
       yellows[i] = guess[i];
     } else if (game.solution.indexOf(guess[i]) < 0) {
-      colors[i] = "rgb(170, 170, 170)";
+      game.colors[i] = Config.colors.default;
     }
   }
 
   game.allowInputs = false;
   for (let i = 0; i < guess.length; i++) {
-    let tile = divs[game.currentTile - WORD_LENGTH + i];
+    let tile = divs[game.currentTile - Config.word_length + i];
     setTimeout(() => {
       tile.classList.add("flip");
       setTimeout(() => {
-        tile.style.backgroundColor = colors[i];
+        tile.style.backgroundColor = game.colors[i];
       }, 500);
     }, i * 500 + 100);
   }
 
   setTimeout(() => {
     updateKeyboard(guess);
-
-    if (count == WORD_LENGTH) {
-      endGame("You win!");
-      return;
-    } else if (game.attempts == 6) {
-      endGame(game.solution);
-      return;
+    if(!determineGameOver()){
+      game.allowInputs = true;
     }
-    game.allowInputs = true;
   }, guess.length * 500 + 100);
+}
+
+function determineGameOver(){
+  if (game.correct_letters == Config.word_length) {
+      displayMessage("You win!");
+      game.gameOver = true;
+      endGame();
+  } 
+  else if (game.attempts == Config.max_attempts) {
+      displayMessage(game.solution);
+      game.gameOver = true;
+      endGame();
+  }
+  return game.gameOver;
 }
 
 function updateKeyboard(guess) {
   const buttons = document.getElementsByClassName("key");
 
-  for (let i = 0; i < WORD_LENGTH; i++) {
+  for (let i = 0; i < Config.word_length; i++) {
     const letter = guess[i];
-    const color = colors[i];
+    const color = game.colors[i];
 
     for (let j = 0; j < buttons.length; j++) {
       if (buttons[j].textContent == letter) {
@@ -209,12 +229,12 @@ function updateKeyboard(guess) {
 
         if (currentColor == "") {
           buttons[j].style.backgroundColor = color;
-        } else if (color == "rgb(83, 141, 78)") {
+        } else if (color == Config.colors.correct) {
           // green
           buttons[j].style.backgroundColor = color;
         } else if (
-          color == "rgb(181, 159, 59)" &&
-          currentColor == "rgb(170, 170, 170)"
+          color == Config.colors.present &&
+          currentColor == Config.colors.default
         ) {
           buttons[j].style.backgroundColor = color;
         }
@@ -223,35 +243,35 @@ function updateKeyboard(guess) {
   }
 }
 
-function endGame(message) {
-  game.gameOver = true;
-  game.allowInputs = false;
-
+// Game Reset / Replay
+function endGame() {
   setTimeout(() => {
     const summary = document.getElementById("summary");
     summary.style.visibility = "visible";
   }, 1500);
-
-  displayMessage(message);
 }
 
-// 7. Game Reset / Replay
 document.getElementById("next_game").addEventListener("click", resetGame);
-
 function resetGame(e) {
   if (e.target.id == "next_game") {
-    console.log(e);
-    document.getElementById("table").innerHTML = "";
-    generateBoard();
-    document.getElementById("keyboard").innerHTML = "";
-    generateKeyBoard();
+    resetGameState();
+    resetUserFields();
+    startGame();
     document.getElementById("summary").style.visibility = "hidden";
-    colors.fill("rgb(170,170,170)");
-    fetchWord();
-    game.allowInputs = true;
-    game.currentTile = 0;
-    game.endOfRow = WORD_LENGTH;
-    game.attempts = 0;
-    count = 0;
   }
+}
+
+function resetUserFields(){
+  document.getElementById("table").innerHTML = "";
+  document.getElementById("keyboard").innerHTML = "";
+}
+
+function resetGameState(){
+  game.currentTile = 0;
+  game.endOfRow = Config.word_length;
+  game.attempts = 0;
+  game.correct_letters = 0;
+  game.colors.fill(Config.colors.default);
+  game.gameOver = false;
+  game.allowInputs = true
 }
