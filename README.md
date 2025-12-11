@@ -1,6 +1,6 @@
 # Limitless Wordle Clone
 
-A full-featured Wordle clone built with **JavaScript**, **HTML**, **CSS**, and a **Node.js + Express + MongoDB backend**.
+A full-featured Wordle clone built with HTML, CSS, JavaScript and a Node.js, Express, MongoDB backend. 
 
 ## Features
 
